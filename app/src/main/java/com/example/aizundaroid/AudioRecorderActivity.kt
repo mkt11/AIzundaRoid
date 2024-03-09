@@ -1,7 +1,6 @@
 package com.example.aizundaroid
 
 
-import com.example.aizundaroid.AudioRecorderViewModel
 import android.Manifest
 import android.content.Context
 import android.media.MediaPlayer
@@ -26,6 +25,8 @@ import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.io.InputStream
+import java.nio.ByteBuffer
+import java.nio.ByteOrder
 
 
 class AudioRecorderActivity : ComponentActivity() {
@@ -103,32 +104,39 @@ class AudioRecorderActivity : ComponentActivity() {
                 //byte
                 var inputStream: InputStream = file.inputStream()
                 var bytes: ByteArray = inputStream.readBytes()
-                //tensor
-                var tensor: Tensor = Tensor.fromBlob(bytes, longArrayOf(1, bytes.size.toLong()))
 
+
+                val tensor = Tensor.fromBlob(bytes, longArrayOf(1, 1, bytes.size.toLong()))
+
+                //tensor
+//                val inTensorBuffer = Tensor.allocateFloatBuffer(bytes.size)
+//                for (i in bytes.indices) {
+//                    inTensorBuffer.put(i, bytes[i].toFloat())
+//                }
+//                val tensor: Tensor = Tensor.fromBlob(inTensorBuffer, longArrayOf(1, 1, bytes.size.toLong()))
 
                 //embedding
+                println("embedding")
                 val outputTensor: Tensor = model.forward(IValue.from(tensor)).toTensor()
-                //このTensorをwav形式にして再生
-                val outputBytes: ByteArray = outputTensor.dataAsByteArray
-                val outputWav: File = File(outputFile)
-                outputWav.writeBytes(outputBytes)
-                //outputWav を　pathに保存
-                val path = outputFile
-                outputWav.copyTo(File(path), true)
-                //再生
-                mediaPlayer = MediaPlayer().apply {
-                    try {
-                        setDataSource(path)
-                        prepare()
-                        start()
-                    } catch (e: IOException) {
-                        e.printStackTrace()
-                    }
+                println("embedded")
+                println(outputTensor)
+
+                val data = FloatArray(bytes.size)
+                outputTensor.dataAsFloatArray.copyInto(data, 0, 0, bytes.size)
+
+// 新しい形状 [1, 5280] でTensorを再生成します
+                val newTensorShape = longArrayOf(1, bytes.size.toLong()) // 新しい形状
+                val newTensorBuffer = Tensor.allocateFloatBuffer(bytes.size)
+                data.forEach { value ->
+                    newTensorBuffer.put(value)
                 }
+                val newTensor = Tensor.fromBlob(newTensorBuffer, newTensorShape)
+
+                println(newTensor)
+
 
             }) {
-                Text("em")
+                Text("embdding")
             }
         }
     }
