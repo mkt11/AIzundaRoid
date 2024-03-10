@@ -26,8 +26,9 @@ class AudioRecorder(private val outputFile: String) {
         // MediaRecorderのインスタンスを直接生成
         mediaRecorder = MediaRecorder().apply {
             setAudioSource(MediaRecorder.AudioSource.MIC)
-            setOutputFormat(MediaRecorder.OutputFormat.DEFAULT)
-            setAudioEncoder(MediaRecorder.AudioEncoder.DEFAULT)
+            setOutputFormat(MediaRecorder.OutputFormat.THREE_GPP)
+            setAudioEncoder(MediaRecorder.AudioEncoder.AMR_WB)
+            setAudioSamplingRate(16000)
             setOutputFile(outputFile)
 
             try {

@@ -17,6 +17,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.arthenica.ffmpegkit.FFmpegKit
+import com.arthenica.ffmpegkit.ReturnCode
+import com.chaquo.python.Python
+import com.chaquo.python.android.AndroidPlatform
 import org.pytorch.IValue
 import org.pytorch.LiteModuleLoader
 import org.pytorch.Module
@@ -27,6 +31,7 @@ import java.io.IOException
 import java.io.InputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+
 
 
 class AudioRecorderActivity : ComponentActivity() {
@@ -43,6 +48,17 @@ class AudioRecorderActivity : ComponentActivity() {
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
+
+        if (! Python.isStarted()) {
+            Python.start(AndroidPlatform(this))
+        }
+        val py = Python.getInstance()
+
+        // 以下書き換え
+        val pyinfer = py.getModule("infer") // スクリプト名
+
+
 
         //// assetファイルからパスを取得する関数
         fun assetFilePath(context: Context, assetName: String): String {
@@ -71,7 +87,7 @@ class AudioRecorderActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         requestPermissions()
         setContent {
-            AudioRecorderUI(viewModel = viewModel , model = model)
+            AudioRecorderUI(viewModel = viewModel , model = model , pyinfer = pyinfer ,modelpath = modelPath)
         }
     }
 
@@ -80,7 +96,7 @@ class AudioRecorderActivity : ComponentActivity() {
     }
 
     @Composable
-    fun AudioRecorderUI(viewModel: AudioRecorderViewModel  , model: Module) {
+    fun AudioRecorderUI(viewModel: AudioRecorderViewModel  , model: Module , pyinfer: com.chaquo.python.PyObject , modelpath : String) {
         Column(modifier = Modifier.padding(PaddingValues(16.dp))) {
             Button(onClick = {
                 viewModel.startRecording()
@@ -97,16 +113,56 @@ class AudioRecorderActivity : ComponentActivity() {
             }
 
             Button(onClick = {
-                var mediaPlayer: MediaPlayer? = null
-                val outputFile = application.filesDir.absolutePath + File.separator + "recorded_audio.wav"
 
+                var mediaPlayer: MediaPlayer? = null
+                val outputFile = application.filesDir.absolutePath + File.separator + "recorded_audio.3gp"
+                val outputFile2 : String = application.filesDir.absolutePath + File.separator + "recorded_audio2.wav"
+                val outputFile3 : String = application.filesDir.absolutePath + File.separator + "recorded_audio3.wav"
                 var file: File = File(outputFile)
+                var file3 = File(outputFile3)
+                file3.delete()
                 //byte
                 var inputStream: InputStream = file.inputStream()
                 var bytes: ByteArray = inputStream.readBytes()
 
+//                val tensor = Tensor.fromBlob(bytes, longArrayOf(1, 1, bytes.size.toLong()))
+//
+                fun convert3gpToWav(inputPath: String, outputPath: String) {
+                    val cmd = "-y -i $inputPath $outputPath"
+                    FFmpegKit.executeAsync(cmd) { session ->
+                        val returnCode = session.returnCode
+                        if (ReturnCode.isSuccess(returnCode)) {
+                            println("success")
+                        } else if (ReturnCode.isCancel(returnCode)) {
+                            println("canceled")
+                        } else {
+                            println("error")
+                        }
+                    }
+                }
 
-                val tensor = Tensor.fromBlob(bytes, longArrayOf(1, 1, bytes.size.toLong()))
+                convert3gpToWav(outputFile , outputFile2)
+                val audio = pyinfer.callAttr("load_wav",  outputFile2 )
+                var floatArray = audio.toJava(FloatArray::class.java)
+                val tensor = Tensor.fromBlob(floatArray, longArrayOf(1, 1, floatArray.size.toLong()))
+                val outputTensor: Tensor = model.forward(IValue.from(tensor)).toTensor()
+
+
+
+                val data = FloatArray(floatArray.size)
+                outputTensor.dataAsFloatArray.copyInto(data, 0, 0, floatArray.size)
+                pyinfer.callAttr("save_tensor_to_wav", data , outputFile3)
+
+                mediaPlayer = MediaPlayer().apply {
+                    try {
+                        setDataSource(outputFile3)
+                        prepare()
+                        start()
+                    } catch (e: IOException) {
+                        e.printStackTrace()
+                    }
+                }
+
 
                 //tensor
 //                val inTensorBuffer = Tensor.allocateFloatBuffer(bytes.size)
@@ -114,25 +170,33 @@ class AudioRecorderActivity : ComponentActivity() {
 //                    inTensorBuffer.put(i, bytes[i].toFloat())
 //                }
 //                val tensor: Tensor = Tensor.fromBlob(inTensorBuffer, longArrayOf(1, 1, bytes.size.toLong()))
+//
+//                //embedding
+//                println("embedding")
+//                val outputTensor: Tensor = model.forward(IValue.from(tensor)).toTensor()
+//                println("embedded")
+//                println(outputTensor)
+//
+//                val data = FloatArray(bytes.size)
+//                outputTensor.dataAsFloatArray.copyInto(data, 0, 0, bytes.size)
+//
+//                pyinfer.callAttr("load_wav",  outputFile , outputFile2)
+//
+//                //pyinfer.callAttr("save_tensor_to_wav", data , outputFile2)
+//
+//                mediaPlayer = MediaPlayer().apply {
+//                    try {
+//                        setDataSource(outputFile2)
+//                        prepare()
+//                        start()
+//                    } catch (e: IOException) {
+//                        e.printStackTrace()
+//                    }
+//                }
 
-                //embedding
-                println("embedding")
-                val outputTensor: Tensor = model.forward(IValue.from(tensor)).toTensor()
-                println("embedded")
-                println(outputTensor)
 
-                val data = FloatArray(bytes.size)
-                outputTensor.dataAsFloatArray.copyInto(data, 0, 0, bytes.size)
 
-// 新しい形状 [1, 5280] でTensorを再生成します
-                val newTensorShape = longArrayOf(1, bytes.size.toLong()) // 新しい形状
-                val newTensorBuffer = Tensor.allocateFloatBuffer(bytes.size)
-                data.forEach { value ->
-                    newTensorBuffer.put(value)
-                }
-                val newTensor = Tensor.fromBlob(newTensorBuffer, newTensorShape)
 
-                println(newTensor)
 
 
             }) {
