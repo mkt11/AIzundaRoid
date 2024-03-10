@@ -133,6 +133,26 @@ class AudioRecorderActivity : ComponentActivity() {
                         val returnCode = session.returnCode
                         if (ReturnCode.isSuccess(returnCode)) {
                             println("success")
+                            val audio = pyinfer.callAttr("load_wav",  outputFile2 )
+                            var floatArray = audio.toJava(FloatArray::class.java)
+                            val tensor = Tensor.fromBlob(floatArray, longArrayOf(1, 1, floatArray.size.toLong()))
+                            val outputTensor: Tensor = model.forward(IValue.from(tensor)).toTensor()
+
+                            val data = FloatArray(floatArray.size)
+                            outputTensor.dataAsFloatArray.copyInto(data, 0, 0, floatArray.size)
+                            pyinfer.callAttr("save_tensor_to_wav", data , outputFile3)
+
+                            mediaPlayer = MediaPlayer().apply {
+                                try {
+                                    setDataSource(outputFile3)
+                                    prepare()
+                                    start()
+                                } catch (e: IOException) {
+                                    e.printStackTrace()
+                                }
+
+                            }
+
                         } else if (ReturnCode.isCancel(returnCode)) {
                             println("canceled")
                         } else {
@@ -141,67 +161,14 @@ class AudioRecorderActivity : ComponentActivity() {
                     }
                 }
 
+
+
                 convert3gpToWav(outputFile , outputFile2)
-                val audio = pyinfer.callAttr("load_wav",  outputFile2 )
-                var floatArray = audio.toJava(FloatArray::class.java)
-                val tensor = Tensor.fromBlob(floatArray, longArrayOf(1, 1, floatArray.size.toLong()))
-                val outputTensor: Tensor = model.forward(IValue.from(tensor)).toTensor()
-
-
-
-                val data = FloatArray(floatArray.size)
-                outputTensor.dataAsFloatArray.copyInto(data, 0, 0, floatArray.size)
-                pyinfer.callAttr("save_tensor_to_wav", data , outputFile3)
-
-                mediaPlayer = MediaPlayer().apply {
-                    try {
-                        setDataSource(outputFile3)
-                        prepare()
-                        start()
-                    } catch (e: IOException) {
-                        e.printStackTrace()
-                    }
-                }
-
-
-                //tensor
-//                val inTensorBuffer = Tensor.allocateFloatBuffer(bytes.size)
-//                for (i in bytes.indices) {
-//                    inTensorBuffer.put(i, bytes[i].toFloat())
-//                }
-//                val tensor: Tensor = Tensor.fromBlob(inTensorBuffer, longArrayOf(1, 1, bytes.size.toLong()))
-//
-//                //embedding
-//                println("embedding")
-//                val outputTensor: Tensor = model.forward(IValue.from(tensor)).toTensor()
-//                println("embedded")
-//                println(outputTensor)
-//
-//                val data = FloatArray(bytes.size)
-//                outputTensor.dataAsFloatArray.copyInto(data, 0, 0, bytes.size)
-//
-//                pyinfer.callAttr("load_wav",  outputFile , outputFile2)
-//
-//                //pyinfer.callAttr("save_tensor_to_wav", data , outputFile2)
-//
-//                mediaPlayer = MediaPlayer().apply {
-//                    try {
-//                        setDataSource(outputFile2)
-//                        prepare()
-//                        start()
-//                    } catch (e: IOException) {
-//                        e.printStackTrace()
-//                    }
-//                }
-
-
-
-
-
 
             }) {
-                Text("embdding")
+                Text("Embdding")
             }
+
         }
     }
 }
