@@ -5,6 +5,7 @@ import android.Manifest
 import android.content.Context
 import android.media.MediaPlayer
 import android.os.Bundle
+import android.widget.ProgressBar
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
@@ -12,15 +13,23 @@ import androidx.activity.viewModels
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LinearProgressIndicator
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.arthenica.ffmpegkit.FFmpegKit
 import com.arthenica.ffmpegkit.ReturnCode
 import com.chaquo.python.Python
 import com.chaquo.python.android.AndroidPlatform
+
+import com.example.aizundaroid.model.AudioRecorder
 import org.pytorch.IValue
 import org.pytorch.LiteModuleLoader
 import org.pytorch.Module
@@ -31,6 +40,7 @@ import java.io.IOException
 import java.io.InputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+
 
 
 
@@ -97,13 +107,14 @@ class AudioRecorderActivity : ComponentActivity() {
 
     @Composable
     fun AudioRecorderUI(viewModel: AudioRecorderViewModel  , model: Module , pyinfer: com.chaquo.python.PyObject , modelpath : String) {
+
         Column(modifier = Modifier.padding(PaddingValues(16.dp))) {
+
+            viewModel.IndeterminateCircularIndicator()
+
             Button(onClick = {
-                viewModel.startRecording()
+                viewModel.stopRecording()
             }) {
-                Text("Start Recording")
-            }
-            Button(onClick = { viewModel.stopRecording() }) {
                 Text("Stop Recording")
             }
             Button(onClick = {
@@ -171,4 +182,5 @@ class AudioRecorderActivity : ComponentActivity() {
 
         }
     }
+
 }
