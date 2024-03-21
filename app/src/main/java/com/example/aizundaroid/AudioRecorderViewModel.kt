@@ -5,6 +5,7 @@ import android.media.MediaRecorder
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -56,8 +57,6 @@ class AudioRecorderViewModel(application: Application) : AndroidViewModel(applic
     fun IndeterminateCircularIndicator() {
         val loading by audioRecorder.isRecording.collectAsState()
 
-        //loadingをリスナーにして、変更があったら再描画する
-
         Button(onClick = {
             audioRecorder.startRecording()
         },
@@ -68,7 +67,8 @@ class AudioRecorderViewModel(application: Application) : AndroidViewModel(applic
 
         if (!loading) return
 
-        CircularProgressIndicator(
+
+        LinearProgressIndicator(
             modifier = Modifier.width(64.dp),
             color = MaterialTheme.colorScheme.secondary,
         )
