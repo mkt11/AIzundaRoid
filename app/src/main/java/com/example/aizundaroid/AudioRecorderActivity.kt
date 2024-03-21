@@ -10,8 +10,10 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
@@ -22,6 +24,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.arthenica.ffmpegkit.FFmpegKit
@@ -97,7 +100,7 @@ class AudioRecorderActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         requestPermissions()
         setContent {
-            AudioRecorderUI(viewModel = viewModel , model = model , pyinfer = pyinfer ,modelpath = modelPath)
+            AudioRecorderUI(viewModel = viewModel , model = model , pyinfer = pyinfer )
         }
     }
 
@@ -106,17 +109,29 @@ class AudioRecorderActivity : ComponentActivity() {
     }
 
     @Composable
-    fun AudioRecorderUI(viewModel: AudioRecorderViewModel  , model: Module , pyinfer: com.chaquo.python.PyObject , modelpath : String) {
+    fun AudioRecorderUI(viewModel: AudioRecorderViewModel  , model: Module , pyinfer: com.chaquo.python.PyObject ) {
 
-        Column(modifier = Modifier.padding(PaddingValues(16.dp))) {
+        //真ん中に表示
+        Column(modifier = Modifier.fillMaxSize(),
+            horizontalAlignment = Alignment.CenterHorizontally, // 横方向
+            verticalArrangement = Arrangement.Center // 縦方向
 
-            viewModel.IndeterminateCircularIndicator()
+
+
+        ) {
+
+            viewModel.IndeterminateCircularIndicator(Modifier)
 
             Button(onClick = {
                 viewModel.stopRecording()
-            }) {
+
+            }
+
+
+            ) {
                 Text("Stop Recording")
             }
+
             Button(onClick = {
                 viewModel.playRecordedFile()
             }) {
