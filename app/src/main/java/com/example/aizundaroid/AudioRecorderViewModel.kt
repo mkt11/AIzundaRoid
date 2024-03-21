@@ -2,9 +2,11 @@ package com.example.aizundaroid
 
 import android.app.Application
 import android.media.MediaRecorder
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -17,6 +19,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import java.io.File
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 
 class AudioRecorderViewModel(application: Application) : AndroidViewModel(application) {
@@ -53,26 +57,29 @@ class AudioRecorderViewModel(application: Application) : AndroidViewModel(applic
 
 
     @Composable
-    fun IndeterminateCircularIndicator() {
+    fun IndeterminateCircularIndicator( modifier: Modifier) {
         val loading by audioRecorder.isRecording.collectAsState()
-
-        //loadingをリスナーにして、変更があったら再描画する
-
+        var currentProgress by remember { mutableStateOf(0f) }
         Button(onClick = {
             audioRecorder.startRecording()
         },
-            enabled = !loading) {
+            enabled = !loading
+
+        ) {
             Text("Start Recording")
         }
 
 
         if (!loading) return
 
-        CircularProgressIndicator(
-            modifier = Modifier.width(64.dp),
+        Text("Recording...",
+            modifier = modifier.padding(0.dp,24.dp,0.dp,0.dp),)
+        LinearProgressIndicator(
             color = MaterialTheme.colorScheme.secondary,
-        )
+            modifier = modifier.padding(0.dp,0.dp,0.dp,24.dp),)
     }
+
+
 
 
 }
