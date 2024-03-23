@@ -60,6 +60,8 @@ import java.io.IOException
 import java.io.InputStream
 import java.nio.ByteBuffer
 import java.nio.ByteOrder
+import androidx.compose.runtime.setValue
+
 
 
 
@@ -128,6 +130,7 @@ class AudioRecorderActivity : ComponentActivity() {
     @Composable
     fun AudioRecorderUI(viewModel: AudioRecorderViewModel  , model: Module , pyinfer: com.chaquo.python.PyObject ) {
 
+        var zundaflag  = remember { mutableStateOf(0) }
         val infiniteTransition = rememberInfiniteTransition()
         val offsetY by infiniteTransition.animateFloat(
             initialValue = -7f,
@@ -160,28 +163,48 @@ class AudioRecorderActivity : ComponentActivity() {
 
             ) {
 
+            if (zundaflag.value == 0) {
                 Image(
                     painter = painterResource(R.drawable.zunda), contentDescription = "zunda",
                     modifier = Modifier
                         .width(200.dp)
                         .offset(y = offsetY.dp)
                 )
+            }else if (zundaflag.value == 1){
+                Image(
+                    painter = painterResource(R.drawable.zunda_recording), contentDescription = "zunda_recording",
+                    modifier = Modifier
+                        .width(200.dp)
+                        .offset(y = offsetY.dp)
+                )
+            }else if (zundaflag.value == 2){
+                Text("考え中...",
+                    )
 
-                viewModel.IndeterminateCircularIndicator(Modifier)
+                LinearProgressIndicator(
+                    color = MaterialTheme.colorScheme.secondary,
+              )
 
-                Button(onClick = {
-                    viewModel.stopRecording()
-                }
+                Image(
+                    painter = painterResource(R.drawable.zunda_kangae), contentDescription = "zunda_recording",
+                    modifier = Modifier
+                        .width(200.dp)
+                        .offset(y = offsetY.dp)
+                )
+            }else if (zundaflag.value == 3){
+                Image(
+                    painter = painterResource(R.drawable.zunda_server), contentDescription = "zunda_recording",
+                    modifier = Modifier
+                        .width(200.dp)
+                        .offset(y = offsetY.dp)
+                )
+            }
 
-                ) {
-                    Text("録音停止ボタン")
-                }
+                viewModel.RecordStart(Modifier ,zundaflag)
 
-                Button(onClick = {
-                    viewModel.playRecordedFile()
-                }) {
-                    Text("変換前の録音")
-                }
+                viewModel.RecordStop(Modifier ,zundaflag)
+
+                viewModel.RecordPlay(Modifier , zundaflag)
 
                 Button(onClick = {
 
@@ -222,6 +245,7 @@ class AudioRecorderActivity : ComponentActivity() {
 
                                 mediaPlayer = MediaPlayer().apply {
                                     try {
+                                        zundaflag.value = 3
                                         setDataSource(outputFile3)
                                         prepare()
                                         start()
@@ -229,6 +253,9 @@ class AudioRecorderActivity : ComponentActivity() {
                                         e.printStackTrace()
                                     }
 
+                                }//再生が終わった際
+                                mediaPlayer?.setOnCompletionListener {
+                                    zundaflag.value = 0
                                 }
 
                             } else if (ReturnCode.isCancel(returnCode)) {
@@ -238,7 +265,9 @@ class AudioRecorderActivity : ComponentActivity() {
                             }
                         }
                     }
+                    zundaflag.value = 2
                     convert3gpToWav(outputFile, outputFile2)
+
 
                 }) {
                     Text("AIでずんだもん")
