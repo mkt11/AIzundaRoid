@@ -1,11 +1,11 @@
 <h2>AndroidでLLVC（CPU上で動作する高速な声質変換AI）を動かすアプリケーション</h2>
-<p>録音</p>
-<br>再生</br>
-<br>推論再生</br>
+Pytorch Mobile　と　チャコパイ　で移植　
+リアルタイム変換も行えるようにしていきたい
 
-上記の機能を実装済み
+<h2>動作の様子</h2>
+https://github.com/mkt11/AIzundaRoid/assets/63161190/688c6898-3152-4385-b157-1e5172e572e7
 
-<img width="348" alt="スクリーンショット 2024-03-23 214641" src="https://github.com/mkt11/AIzundaRoid/assets/63161190/ca006cd9-fb29-4efb-97c9-76b9908fb4a7">
+
 
 <p>株式会社ディー・エヌ・エー様のプレスリリースに触発されて開発中</p>
 https://dena.com/jp/press/5053/
