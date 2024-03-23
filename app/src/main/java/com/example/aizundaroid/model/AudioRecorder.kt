@@ -5,6 +5,7 @@ import android.media.MediaPlayer
 import android.media.MediaRecorder
 import android.os.Handler
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.runtime.MutableState
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import org.pytorch.IValue
@@ -26,7 +27,7 @@ class AudioRecorder(private val outputFile: String) {
 
 
 
-    fun startRecording() {
+    fun startRecording(zundaflag : MutableState<Int>) {
         if (_isRecording.value) return
 
         // MediaRecorderのインスタンスを直接生成
@@ -50,9 +51,11 @@ class AudioRecorder(private val outputFile: String) {
                 mediaRecorder?.apply {
                 stop()
                 release()
+                zundaflag.value = 0
                 }
                 println("stop recording by timeout")
                 _isRecording.value= false
+
 
             }, 10000)
 

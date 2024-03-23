@@ -10,6 +10,7 @@ import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
@@ -34,8 +35,8 @@ class AudioRecorderViewModel(application: Application) : AndroidViewModel(applic
     )
 
     // 録音を開始する
-    fun startRecording() {
-        audioRecorder.startRecording()
+    fun startRecording(zundaflag : MutableState<Int>) {
+        audioRecorder.startRecording(zundaflag)
     }
 
     // 録音を停止する
@@ -57,11 +58,11 @@ class AudioRecorderViewModel(application: Application) : AndroidViewModel(applic
 
 
     @Composable
-    fun IndeterminateCircularIndicator( modifier: Modifier) {
+    fun RecordStart( modifier: Modifier , zundaflag :  MutableState<Int>) {
         val loading by audioRecorder.isRecording.collectAsState()
-        var currentProgress by remember { mutableStateOf(0f) }
         Button(onClick = {
-            audioRecorder.startRecording()
+            startRecording(zundaflag)
+            zundaflag.value = 1
         },
             enabled = !loading
 
@@ -69,14 +70,37 @@ class AudioRecorderViewModel(application: Application) : AndroidViewModel(applic
             Text("録音ボタン")
         }
 
-
         if (!loading) return
 
-        Text("Recording...",
+        Text("録音中...",
             modifier = modifier.padding(0.dp,24.dp,0.dp,0.dp),)
         LinearProgressIndicator(
             color = MaterialTheme.colorScheme.secondary,
             modifier = modifier.padding(0.dp,0.dp,0.dp,24.dp),)
+    }
+
+    @Composable
+    fun RecordStop( modifier: Modifier , zundaflag :  MutableState<Int>) {
+
+        Button(onClick = {
+            stopRecording()
+            zundaflag.value = 0
+        }
+        ) {
+            Text("録音停止ボタン")
+        }
+    }
+
+    @Composable
+    fun RecordPlay( modifier: Modifier , zundaflag :  MutableState<Int>) {
+
+        Button(onClick = {
+            playRecordedFile()
+
+        }
+        ) {
+            Text("再生ボタン")
+        }
     }
 
 
