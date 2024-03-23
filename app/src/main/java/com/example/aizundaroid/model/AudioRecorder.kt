@@ -22,6 +22,7 @@ class AudioRecorder(private val outputFile: String) {
     private var mediaPlayer: MediaPlayer? = null
     private val _isRecording = MutableStateFlow(false) // Kotlin Flowを使用
     val isRecording: StateFlow<Boolean> = _isRecording
+    private var flag = false
 
 
 
@@ -46,10 +47,13 @@ class AudioRecorder(private val outputFile: String) {
 
             Handler().postDelayed({
                 if(!_isRecording.value) return@postDelayed
+                mediaRecorder?.apply {
                 stop()
                 release()
+                }
                 println("stop recording by timeout")
                 _isRecording.value= false
+
             }, 10000)
 
         }

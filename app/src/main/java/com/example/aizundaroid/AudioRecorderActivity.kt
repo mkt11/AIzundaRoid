@@ -10,22 +10,39 @@ import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.activity.viewModels
+import androidx.compose.animation.core.LinearEasing
+import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.infiniteRepeatable
+import androidx.compose.animation.core.rememberInfiniteTransition
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.LinearProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.arthenica.ffmpegkit.FFmpegKit
 import com.arthenica.ffmpegkit.ReturnCode
@@ -111,90 +128,123 @@ class AudioRecorderActivity : ComponentActivity() {
     @Composable
     fun AudioRecorderUI(viewModel: AudioRecorderViewModel  , model: Module , pyinfer: com.chaquo.python.PyObject ) {
 
-        //真ん中に表示
-        Column(modifier = Modifier.fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally, // 横方向
-            verticalArrangement = Arrangement.Center // 縦方向
-
-
+        val infiniteTransition = rememberInfiniteTransition()
+        val offsetY by infiniteTransition.animateFloat(
+            initialValue = -7f,
+            targetValue = 7f,
+            animationSpec = infiniteRepeatable(
+                animation = tween(3000, easing = LinearEasing),
+                repeatMode = RepeatMode.Reverse
+            )
+        )
+        Box(modifier = Modifier
+            .background(color = Color(red = 207, green = 247, blue = 232))
+            .fillMaxSize(),
+            contentAlignment = Alignment.Center
 
         ) {
 
-            viewModel.IndeterminateCircularIndicator(Modifier)
+            //真ん中に表示
+            Column(
+                modifier = Modifier
+                    .size(600.dp)
+                    .padding(8.dp)
+                    .background(color = Color.White, shape = RoundedCornerShape(50.dp))
+                ,
+                horizontalAlignment = Alignment.CenterHorizontally, // 横方向
+                verticalArrangement = Arrangement.Center // 縦方向,
 
-            Button(onClick = {
-                viewModel.stopRecording()
 
-            }
+                //カラーを決める
 
 
             ) {
-                Text("Stop Recording")
-            }
 
-            Button(onClick = {
-                viewModel.playRecordedFile()
-            }) {
-                Text("Play Recording")
-            }
+                Image(
+                    painter = painterResource(R.drawable.zunda), contentDescription = "zunda",
+                    modifier = Modifier
+                        .width(200.dp)
+                        .offset(y = offsetY.dp)
+                )
 
-            Button(onClick = {
+                viewModel.IndeterminateCircularIndicator(Modifier)
 
-                var mediaPlayer: MediaPlayer? = null
-                val outputFile = application.filesDir.absolutePath + File.separator + "recorded_audio.3gp"
-                val outputFile2 : String = application.filesDir.absolutePath + File.separator + "recorded_audio2.wav"
-                val outputFile3 : String = application.filesDir.absolutePath + File.separator + "recorded_audio3.wav"
-                var file: File = File(outputFile)
-                var file3 = File(outputFile3)
-                file3.delete()
-                //byte
-                var inputStream: InputStream = file.inputStream()
-                var bytes: ByteArray = inputStream.readBytes()
-
-//                val tensor = Tensor.fromBlob(bytes, longArrayOf(1, 1, bytes.size.toLong()))
-//
-                fun convert3gpToWav(inputPath: String, outputPath: String) {
-                    val cmd = "-y -i $inputPath $outputPath"
-                    FFmpegKit.executeAsync(cmd) { session ->
-                        val returnCode = session.returnCode
-                        if (ReturnCode.isSuccess(returnCode)) {
-                            println("success")
-                            val audio = pyinfer.callAttr("load_wav",  outputFile2 )
-                            var floatArray = audio.toJava(FloatArray::class.java)
-                            val tensor = Tensor.fromBlob(floatArray, longArrayOf(1, 1, floatArray.size.toLong()))
-                            val outputTensor: Tensor = model.forward(IValue.from(tensor)).toTensor()
-
-                            val data = FloatArray(floatArray.size)
-                            outputTensor.dataAsFloatArray.copyInto(data, 0, 0, floatArray.size)
-                            pyinfer.callAttr("save_tensor_to_wav", data , outputFile3)
-
-                            mediaPlayer = MediaPlayer().apply {
-                                try {
-                                    setDataSource(outputFile3)
-                                    prepare()
-                                    start()
-                                } catch (e: IOException) {
-                                    e.printStackTrace()
-                                }
-
-                            }
-
-                        } else if (ReturnCode.isCancel(returnCode)) {
-                            println("canceled")
-                        } else {
-                            println("error")
-                        }
-                    }
+                Button(onClick = {
+                    viewModel.stopRecording()
                 }
 
+                ) {
+                    Text("録音停止ボタン")
+                }
 
+                Button(onClick = {
+                    viewModel.playRecordedFile()
+                }) {
+                    Text("変換前の録音")
+                }
 
-                convert3gpToWav(outputFile , outputFile2)
+                Button(onClick = {
 
-            }) {
-                Text("Embdding")
+                    var mediaPlayer: MediaPlayer? = null
+                    val outputFile =
+                        application.filesDir.absolutePath + File.separator + "recorded_audio.3gp"
+                    val outputFile2: String =
+                        application.filesDir.absolutePath + File.separator + "recorded_audio2.wav"
+                    val outputFile3: String =
+                        application.filesDir.absolutePath + File.separator + "recorded_audio3.wav"
+                    var file: File = File(outputFile)
+                    var file3 = File(outputFile3)
+                    file3.delete()
+                    //byte
+                    var inputStream: InputStream = file.inputStream()
+                    var bytes: ByteArray = inputStream.readBytes()
+
+                    //                val tensor = Tensor.fromBlob(bytes, longArrayOf(1, 1, bytes.size.toLong()))
+//
+                    fun convert3gpToWav(inputPath: String, outputPath: String) {
+                        val cmd = "-y -i $inputPath $outputPath"
+                        FFmpegKit.executeAsync(cmd) { session ->
+                            val returnCode = session.returnCode
+                            if (ReturnCode.isSuccess(returnCode)) {
+                                println("success")
+                                val audio = pyinfer.callAttr("load_wav", outputFile2)
+                                var floatArray = audio.toJava(FloatArray::class.java)
+                                val tensor = Tensor.fromBlob(
+                                    floatArray,
+                                    longArrayOf(1, 1, floatArray.size.toLong())
+                                )
+                                val outputTensor: Tensor =
+                                    model.forward(IValue.from(tensor)).toTensor()
+
+                                val data = FloatArray(floatArray.size)
+                                outputTensor.dataAsFloatArray.copyInto(data, 0, 0, floatArray.size)
+                                pyinfer.callAttr("save_tensor_to_wav", data, outputFile3)
+
+                                mediaPlayer = MediaPlayer().apply {
+                                    try {
+                                        setDataSource(outputFile3)
+                                        prepare()
+                                        start()
+                                    } catch (e: IOException) {
+                                        e.printStackTrace()
+                                    }
+
+                                }
+
+                            } else if (ReturnCode.isCancel(returnCode)) {
+                                println("canceled")
+                            } else {
+                                println("error")
+                            }
+                        }
+                    }
+                    convert3gpToWav(outputFile, outputFile2)
+
+                }) {
+                    Text("AIでずんだもん")
+                }
+
             }
-
         }
     }
 

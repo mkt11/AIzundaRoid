@@ -66,7 +66,7 @@ class AudioRecorderViewModel(application: Application) : AndroidViewModel(applic
             enabled = !loading
 
         ) {
-            Text("Start Recording")
+            Text("録音ボタン")
         }
 
 
@@ -78,6 +78,8 @@ class AudioRecorderViewModel(application: Application) : AndroidViewModel(applic
             color = MaterialTheme.colorScheme.secondary,
             modifier = modifier.padding(0.dp,0.dp,0.dp,24.dp),)
     }
+
+
 
 
 
