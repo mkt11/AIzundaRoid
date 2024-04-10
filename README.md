@@ -8,6 +8,5 @@ https://github.com/mkt11/AIzundaRoid/assets/63161190/688c6898-3152-4385-b157-1e5
 
 
 
-<p>株式会社ディー・エヌ・エー様のプレスリリースに触発されて開発中</p>
-https://dena.com/jp/press/5053/
+
 
