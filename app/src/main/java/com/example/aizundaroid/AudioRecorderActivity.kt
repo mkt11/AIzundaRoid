@@ -130,7 +130,7 @@ class AudioRecorderActivity : ComponentActivity() {
     @Composable
     fun AudioRecorderUI(viewModel: AudioRecorderViewModel  , model: Module , pyinfer: com.chaquo.python.PyObject ) {
 
-        var zundaflag  = remember { mutableStateOf(0) }
+        var zundaflag  = remember { mutableStateOf(-1) }
         val infiniteTransition = rememberInfiniteTransition()
         val offsetY by infiniteTransition.animateFloat(
             initialValue = -7f,
@@ -157,47 +157,48 @@ class AudioRecorderActivity : ComponentActivity() {
                 horizontalAlignment = Alignment.CenterHorizontally, // 横方向
                 verticalArrangement = Arrangement.Center // 縦方向,
 
-
-                //カラーを決める
-
-
             ) {
 
-            if (zundaflag.value == 0) {
-                Image(
-                    painter = painterResource(R.drawable.zunda), contentDescription = "zunda",
-                    modifier = Modifier
-                        .width(200.dp)
-                        .offset(y = offsetY.dp)
-                )
-            }else if (zundaflag.value == 1){
-                Image(
-                    painter = painterResource(R.drawable.zunda_recording), contentDescription = "zunda_recording",
-                    modifier = Modifier
-                        .width(200.dp)
-                        .offset(y = offsetY.dp)
-                )
-            }else if (zundaflag.value == 2){
-                Text("考え中...",
+            when (zundaflag.value) {
+                0, -1 -> {
+                    Image(
+                        painter = painterResource(R.drawable.zunda), contentDescription = "zunda",
+                        modifier = Modifier
+                            .width(200.dp)
+                            .offset(y = offsetY.dp)
+                    )
+                }
+                1 -> {
+                    Image(
+                        painter = painterResource(R.drawable.zunda_recording), contentDescription = "zunda_recording",
+                        modifier = Modifier
+                            .width(200.dp)
+                            .offset(y = offsetY.dp)
+                    )
+                }
+                2 -> {
+                    Text("考え中...",
                     )
 
-                LinearProgressIndicator(
-                    color = MaterialTheme.colorScheme.secondary,
-              )
+                    LinearProgressIndicator(
+                        color = MaterialTheme.colorScheme.secondary,
+                    )
 
-                Image(
-                    painter = painterResource(R.drawable.zunda_kangae), contentDescription = "zunda_recording",
-                    modifier = Modifier
-                        .width(200.dp)
-                        .offset(y = offsetY.dp)
-                )
-            }else if (zundaflag.value == 3){
-                Image(
-                    painter = painterResource(R.drawable.zunda_server), contentDescription = "zunda_recording",
-                    modifier = Modifier
-                        .width(200.dp)
-                        .offset(y = offsetY.dp)
-                )
+                    Image(
+                        painter = painterResource(R.drawable.zunda_kangae), contentDescription = "zunda_recording",
+                        modifier = Modifier
+                            .width(200.dp)
+                            .offset(y = offsetY.dp)
+                    )
+                }
+                3 -> {
+                    Image(
+                        painter = painterResource(R.drawable.zunda_server), contentDescription = "zunda_recording",
+                        modifier = Modifier
+                            .width(200.dp)
+                            .offset(y = offsetY.dp)
+                    )
+                }
             }
 
                 viewModel.RecordStart(Modifier ,zundaflag)
@@ -222,8 +223,6 @@ class AudioRecorderActivity : ComponentActivity() {
                     var inputStream: InputStream = file.inputStream()
                     var bytes: ByteArray = inputStream.readBytes()
 
-                    //                val tensor = Tensor.fromBlob(bytes, longArrayOf(1, 1, bytes.size.toLong()))
-//
                     fun convert3gpToWav(inputPath: String, outputPath: String) {
                         val cmd = "-y -i $inputPath $outputPath"
                         FFmpegKit.executeAsync(cmd) { session ->
@@ -265,11 +264,15 @@ class AudioRecorderActivity : ComponentActivity() {
                             }
                         }
                     }
+
                     zundaflag.value = 2
                     convert3gpToWav(outputFile, outputFile2)
 
 
-                }) {
+                },
+                    enabled = zundaflag.value == 0
+
+                ) {
                     Text("AIでずんだもん")
                 }
 

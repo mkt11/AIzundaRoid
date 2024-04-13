@@ -64,7 +64,7 @@ class AudioRecorderViewModel(application: Application) : AndroidViewModel(applic
             startRecording(zundaflag)
             zundaflag.value = 1
         },
-            enabled = !loading
+            enabled = !loading && (zundaflag.value == 0 || zundaflag.value == -1)
 
         ) {
             Text("録音ボタン")
@@ -85,7 +85,8 @@ class AudioRecorderViewModel(application: Application) : AndroidViewModel(applic
         Button(onClick = {
             stopRecording()
             zundaflag.value = 0
-        }
+        },
+            enabled = zundaflag.value == 1
         ) {
             Text("録音停止ボタン")
         }
@@ -96,8 +97,8 @@ class AudioRecorderViewModel(application: Application) : AndroidViewModel(applic
 
         Button(onClick = {
             playRecordedFile()
-
-        }
+        },
+            enabled = zundaflag.value == 0
         ) {
             Text("再生ボタン")
         }
