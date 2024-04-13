@@ -7,7 +7,7 @@ from scipy.io import wavfile
 
 
 def load_wav(filename ):
-    #wavファイルを読み込む
+    #wavファイルを読み込む 
     sample_rate, audio = wavfile.read(filename)
     print('Loaded wav file at', filename)
     print('Sample rate:', sample_rate)
